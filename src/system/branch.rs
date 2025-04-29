@@ -1,4 +1,4 @@
-use crate::versioncontrol::VersionControl;
+use crate::system::versioncontrol::VersionControl;
 
 pub struct Branch {
   name: String,

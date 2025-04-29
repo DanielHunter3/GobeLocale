@@ -1,6 +1,6 @@
 use::std::path::PathBuf;
 
-use crate::change::Change;
+use crate::system::change::Change;
 
 pub struct Commit {
   name: String,

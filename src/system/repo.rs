@@ -1,6 +1,6 @@
-use std::fs;
+use crate::system::branch::Branch;
 
-use crate::branch::Branch;
+use std::fs;
 
 pub struct LocaleRepository {
   //-------------------
@@ -13,6 +13,7 @@ pub struct LocaleRepository {
   version: String,
   //------
   current_branch: Branch,
+  main_branch: Branch,
   branches: Vec<Branch>,
   //----------------------
 }
