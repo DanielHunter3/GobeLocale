@@ -1,11 +1,14 @@
 extern crate serde_json;
-extern crate iced;
+extern crate serde;
 
 mod utils;
 mod system;
 mod user;
+mod cli;
+mod general_ui;
+
+use cli::authorize_user;
 
 fn main() {
- //let repo = system::repo::LocaleRepository::new("I".to_string(), "Some".to_string());
- let author = user::user::UserLocale::new("I".to_string(), "w".to_string());
+    authorize_user::authorize_cli();
 }
