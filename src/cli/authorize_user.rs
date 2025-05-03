@@ -1,4 +1,4 @@
-use crate::general_ui::authorize::{AuthorizeEnum, authorize};
+use crate::user::authorize::{AuthorizeEnum, authorize};
 use crate::utils::utilio::input;
 
 
