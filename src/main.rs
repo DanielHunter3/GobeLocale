@@ -6,7 +6,7 @@ mod system;
 mod user;
 mod cli;
 
-use crate::utils::utilhaffman::{compress, write_to_file, decompress, read_from_file};
+use crate::utils::utilhuffman::{compress, write_to_file, decompress, read_from_file};
 
 fn main() -> std::io::Result<()> {
   let input_text = "this is an example for huffman encoding";

@@ -23,7 +23,7 @@ impl Commit {
   }
 
   // TODO
-  pub fn upload() {}
-  // TODO
   pub fn save() {}
+  // TODO
+  pub fn upload() {}
 }

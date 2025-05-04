@@ -1,3 +1,4 @@
 pub mod utilio;
 pub mod utilvec;
-pub mod utilhaffman;
+pub mod utilhuffman;
+pub mod utilzip;
