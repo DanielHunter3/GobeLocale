@@ -1,23 +1,28 @@
+use std::collections::HashMap;
+
 use crate::system::commit::Commit;
 
 pub struct Branch {
   name: String,
   last_commit: String,
   current_commit: Box<Option<Commit>>,
-  commits: Vec<String>,
+  commits: HashMap<usize, String>,
 }
 
 impl Branch {
-  pub fn new(name: &str) -> Branch {
+  pub fn new(name: String) -> Branch {
     Branch { 
-      name: String::from(name), 
+      name, 
       last_commit: String::new(), 
       current_commit: Box::new(None),
-      commits: Vec::new()
+      commits: HashMap::new()
     }
   }
-
-  pub fn append(commit: Commit) {
-    
+  //TODO
+  pub fn append(&mut self, commit: &Commit) -> Result<(), &str> {
+    if commit.get_parent().is_none() && !self.commits.is_empty() { return Err("to-to-to"); }
+    commit.save();
+    self.commits.insert(self.commits.len()+1, commit.get_name());
+    Ok(())
   }
 }

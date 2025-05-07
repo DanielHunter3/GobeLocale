@@ -1,7 +1,11 @@
+use std::fs::File;
 use::std::path::PathBuf;
+use serde::{Serialize, Deserialize};
+use std::io::{self};
 
 use crate::system::change::Change;
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Commit {
   name: String,
   //
@@ -15,13 +19,13 @@ pub struct Commit {
 }
 
 impl Commit {
-  pub fn new(name: &str, message: &str, parent: Option<String>, change: Change) -> Commit { 
+  pub fn new(name: String, message: String, parent: Option<String>, change: Change) -> Commit { 
     Commit { 
-      name: String::from(name), 
-      message: String::from(message), 
+      name, 
+      message,
       parent,
       change: Box::new(change), 
-      gci_file: PathBuf::from(name.to_string() + ".json")
+      gci_file: PathBuf::new()
     } 
   }
 
@@ -29,8 +33,28 @@ impl Commit {
     self.name.clone()
   }
 
+  pub fn get_message(&self) -> String {
+    self.message.clone()
+  }
+
+  pub fn get_parent(&self) -> Option<String> {
+    self.parent.clone()
+  }
+
+  pub fn save_to_file(&self, file: &PathBuf) -> io::Result<()> {
+    let file = File::create(file)?;
+    serde_json::to_writer(file, &self)?;
+    Ok(())
+  }
+
+  pub fn load_from_file(path: &PathBuf) -> io::Result<Commit> {
+    let file = File::open(path)?;
+    let change = serde_json::from_reader(file)?;
+    Ok(change)
+  }
+
   // TODO
-  pub fn save() {}
+  pub fn save(&self) {}
   // TODO
-  pub fn upload() {}
+  pub fn upload(&self) {}
 }
