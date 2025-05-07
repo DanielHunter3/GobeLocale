@@ -26,12 +26,12 @@ pub struct LocaleRepository {
 
 impl LocaleRepository {
 
-  pub fn new(author: String, name: String) -> LocaleRepository {
+  pub fn new(author: &str, name: &str) -> LocaleRepository {
     LocaleRepository {
       // Должен быть локальный юзер
-      author, 
+      author: String::from(author), 
       // Название репозитория
-      name,
+      name: String::from(name),
       // Положение на этой машине
       project_sourse_dir: std::env::current_dir().unwrap(), 
       // См. выше
@@ -41,11 +41,11 @@ impl LocaleRepository {
       // Нулевая готовность проекта
       version: ProjectVersion::new(0, 0, 0, 0),
       // Текущая ветка: master
-      current_branch: Branch::new("master".to_string()), 
+      current_branch: Branch::new("master"), 
       // Главная ветка: master
       main_branch: String::from("master"), 
       // Новые ветки: добаляем master
-      branches: vec!["master".to_string()]
+      branches: vec![String::from("master")]
     }
   }
 
