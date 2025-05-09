@@ -1,3 +1,5 @@
+use system::repo::LocaleRepository;
+
 extern crate serde_json;
 extern crate serde;
 
@@ -7,7 +9,9 @@ mod user;
 mod cli;
 
 fn main() {
-  let b = Box::new(50);
-  let p: *const usize = &50;
-  assert_eq!(std::mem::size_of_val(&b), std::mem::size_of_val(&p))
+  let x = LocaleRepository::new("David".to_string(), "CLang++".to_string());
+  match x.init()  {
+    Ok(_) => {},
+    Err(_) => {println!("{}", x.get_repo_folder())}
+  }
 }

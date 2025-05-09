@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
+
 use crate::system::commit::Commit;
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Branch {
   name: String,
   last_commit: String,
