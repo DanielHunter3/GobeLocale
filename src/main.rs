@@ -1,5 +1,3 @@
-use system::repo::LocaleRepository;
-
 extern crate serde_json;
 extern crate serde;
 
@@ -9,9 +7,15 @@ mod user;
 mod cli;
 
 fn main() {
-  let x = LocaleRepository::new("David".to_string(), "CLang++".to_string());
-  match x.init()  {
-    Ok(_) => {},
-    Err(_) => {println!("{}", x.get_repo_folder())}
+  match system::repo::LocaleRepository::new("aaa".into(), "bbb".into()) {
+    Ok(repo) => {
+      println!("Repository created successfully");
+      // Use repo as needed
+    },
+    Err(e) => {
+      eprintln!("Failed to create repository: {}", e);
+      eprintln!("Current directory: {:?}", std::env::current_dir());
+      std::process::exit(1);
+    }
   }
 }

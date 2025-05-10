@@ -15,10 +15,10 @@ pub struct LocaleRepository {
   // Расположение папки .gobe для этого репозитория на этой машине
   repository_folder: PathBuf,
   // Версия репозитория (проекта)
-  version: ProjectVersion,
-  // Активная ветка
+  version: Box<ProjectVersion>,
+  // Активная ветка (может и не быть никакой активной ветки)
   #[serde(skip_serializing)]
-  current_branch: Box<Branch>,
+  current_branch: Box<Option<Branch>>,
   // Главная ветка
   main_branch: String,
   // Все ветки
@@ -27,39 +27,70 @@ pub struct LocaleRepository {
 
 impl LocaleRepository {
 
-  pub fn new(author: String, name: String) -> LocaleRepository {
-    LocaleRepository {
+  fn alloc(author: String, name: String) -> std::io::Result<LocaleRepository> {
+    // Check if current directory exists and is accessible
+    let current_dir = std::env::current_dir()?;
+    
+    // Create the repository path
+    let repo_folder = current_dir.join(".gobe");
+    //
+    Ok(LocaleRepository {
       // Должен быть локальный юзер
       author, 
       // Название репозитория
       name,
+      //---------------------------------------------------------------------
       // Положение на этой машине
-      project_sourse_dir: std::env::current_dir().unwrap(), 
+      project_sourse_dir: current_dir, 
       // См. выше
-      repository_folder: 
-        std::env::current_dir().unwrap().join(".gobe"),
+      repository_folder: repo_folder,
+      //---------------------------------------------------------------------
       // Нулевая готовность проекта
-      version: ProjectVersion::new(0, 0, 0, 0),
-      // Текущая ветка: master
-      current_branch: Box::new(Branch::new(String::from("master"))), 
-      // Главная ветка: master
-      main_branch: String::from("master"), 
-      // Новые ветки: добаляем master
-      branches: vec![String::from("master")]
-    }
+      version: Box::new(ProjectVersion::new(0, 0, 0, 0)),
+      //----------------------------------------------------------------------
+      // Текущая ветка: None
+      current_branch: Box::new(None),
+      // Главная ветка: NULL
+      main_branch: String::new(), 
+      // Новые ветки: NULL
+      branches: Vec::new()
+    })
   }
 
-  pub fn init(&self) -> std::io::Result<()> {
-    // TODO
-    std::fs::create_dir(&self.repository_folder)?;
-    self.save_to_file()?;
+  fn init(&mut self) -> std::io::Result<()> {
+    self.current_branch = Box::new(
+      Some(
+        Branch::new(
+        String::from("master"), 
+        self.repository_folder.clone()
+        )?
+      )
+    );
+    self.main_branch = String::from("master");
+    self.branches.push(String::from("master"));
     Ok(())
   }
 
-  pub fn save_to_file(&self) -> std::io::Result<()> {
-    let file = File::create(
-      self.repository_folder.clone().join(self.name.clone() + ".json")
-    )?;
+  pub fn new(author: String, name: String) -> std::io::Result<LocaleRepository> {
+    //
+    std::fs::create_dir_all(std::env::current_dir()?.join(".gobe"))?;
+    //
+    let mut result = Self::alloc(author, name)?;
+    result.init()?;
+    //
+    result.save_info_file()?;
+    //
+    Ok(result)
+  }
+
+  #[allow(dead_code)]
+  pub fn append(&mut self, name: String) {
+    
+  }
+
+  pub fn save_info_file(&self) -> std::io::Result<()> {
+    let file_path = self.repository_folder.join(self.name.clone() + ".json");
+    let file = File::create(&file_path)?;
     serde_json::to_writer(file, &self)?;
     Ok(())
   }
@@ -71,8 +102,12 @@ impl LocaleRepository {
   }
 
   // for tests
-  pub fn get_repo_folder(&self) -> &str {
-    self.repository_folder.to_str().unwrap()
+  pub fn get_repo_folder(&self) -> PathBuf {
+    self.repository_folder.clone()
+  }
+
+  pub fn upload(&self) -> std::io::Result<()> {
+    Ok(())
   }
 
 }

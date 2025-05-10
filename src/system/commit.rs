@@ -9,24 +9,44 @@ use crate::system::change::Change;
 pub struct Commit {
   name: String,
   //
-  message: String,
+  message: Option<String>,
   // parent commit
   parent: Option<String>,
   // time pub
-  pub change: Box<Change>,
-  // time pub
-  pub gci_file: PathBuf
+  change: Box<Change>,
+  // commit folder
+  commit_folder: PathBuf
 }
 
 impl Commit {
-  pub fn new(name: String, message: String, parent: Option<String>, change: Change) -> Commit { 
+  fn alloc(name: String, message: Option<String>, change: Change) -> Commit
+  {
     Commit { 
       name, 
       message,
-      parent,
+      parent: None,
       change: Box::new(change), 
-      gci_file: PathBuf::new()
-    } 
+      commit_folder: PathBuf::new()
+    }
+  }
+
+  fn init(&mut self, parent: Option<String>, path: PathBuf) {
+    self.parent = parent;
+    self.commit_folder = path.join(&self.name);
+  }
+
+  pub fn new(
+    name: String, message: Option<String>, change: Change, parent: Option<String>, path: PathBuf
+  ) -> std::io::Result<Commit> {
+    //
+    std::fs::create_dir(path.join(&name))?;
+    //
+    let mut result = Self::alloc(name, message, change);
+    result.init(parent, path);
+    //
+    result.save_info_file()?;
+    //
+    Ok(result)
   }
 
   pub fn get_name(&self) -> String {
@@ -34,15 +54,17 @@ impl Commit {
   }
 
   pub fn get_message(&self) -> String {
-    self.message.clone()
+    self.message.clone().unwrap().clone()
   }
 
   pub fn get_parent(&self) -> Option<String> {
     self.parent.clone()
   }
 
-  pub fn save_to_file(&self, file: &PathBuf) -> io::Result<()> {
-    let file = File::create(file)?;
+  pub fn save_info_file(&self) -> io::Result<()> {
+    let file = File::create(
+      &self.commit_folder.join(self.name.clone() + ".json")
+    )?;
     serde_json::to_writer(file, &self)?;
     Ok(())
   }
@@ -54,7 +76,7 @@ impl Commit {
   }
 
   // TODO
-  pub fn save(&self) {}
-  // TODO
-  pub fn upload(&self) {}
+  pub fn upload(&self) -> std::io::Result<()> {
+    Ok(())
+  }
 }
