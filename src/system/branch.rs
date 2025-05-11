@@ -9,51 +9,51 @@ pub struct Branch {
   name: String,
   last_commit: String,
   #[serde(skip_serializing)]
-  current_commit: Box<Option<Commit>>,
+  current_commit: Box<Commit>,
   commits: Box<HashMap<usize, String>>,
   branch_folder: PathBuf
 }
 
 impl Branch {
-  pub fn alloc(name: String, path: PathBuf) -> Branch {
-    Branch { 
-      name: name.clone(), // init
-      last_commit: String::new(),
-      current_commit: Box::new(None),
-      commits: Box::new(HashMap::new()), // init
-      branch_folder: path.join(name) // init
-    }
+  pub fn alloc(name: String, path: PathBuf) -> std::io::Result<Branch> {
+    std::fs::create_dir(path.join(&name))?;
+
+    let xname = name.clone() + "_first";
+    let mut commits = HashMap::new();
+    commits.insert(1, xname.clone());
+
+    Ok(Branch { 
+      name: name.clone(),
+      last_commit: xname.clone(),
+
+      current_commit: 
+      Box::new(
+        Commit::new(
+          xname.clone(), String::from("first commit"), 
+          Self::alloc_change(), None, path.join(&name)
+        )?
+      ),
+
+      commits: Box::new(commits),
+      branch_folder: path.join(name)
+    })
   }
 
-  fn init(&mut self) -> std::io::Result<()> {
-    let change = Change::new(); // TODO
-    let name = self.name.clone() + "_first";
-
-    self.current_commit = Box::new(
-      Some(
-        Commit::new(
-          name.clone(), None, change, None, self.branch_folder.clone()
-        )?
-      )
-    );
-    self.last_commit = String::from(&name);
-    self.commits.insert(1, name);
-
+  fn init(&self, is_upload: bool) -> std::io::Result<()> {
+    self.save_info_file()?;
+    if is_upload { self.upload()? }
     Ok(())
   }
 
   pub fn new(name: String, path: PathBuf) -> std::io::Result<Branch> {
-    //
-    std::fs::create_dir(path.join(&name))?;
-    //
-    let mut result = Self::alloc(name, path);
-    result.init()?;
-    //
-    result.save_info_file()?;
-    //
-    Ok(result)
+    let /* mut */ result = Self::alloc(name, path);
+    if let Ok(ref /* mut */ branch) = result { // mut
+      branch.init(false)?;
+    }
+    result
   }
 
+    // TODO
   pub fn upload(&self) -> std::io::Result<()> {
     Ok(())
   }
@@ -76,5 +76,9 @@ impl Branch {
     //commit.save_to_file();
     //self.commits.insert(self.commits.len()+1, commit.get_name());
     Ok(())
+  }
+
+  fn alloc_change() -> Change {
+    Change::new()
   }
 }

@@ -18,7 +18,7 @@ pub struct LocaleRepository {
   version: Box<ProjectVersion>,
   // Активная ветка (может и не быть никакой активной ветки)
   #[serde(skip_serializing)]
-  current_branch: Box<Option<Branch>>,
+  current_branch: Box<Branch>,
   // Главная ветка
   main_branch: String,
   // Все ветки
@@ -28,12 +28,11 @@ pub struct LocaleRepository {
 impl LocaleRepository {
 
   fn alloc(author: String, name: String) -> std::io::Result<LocaleRepository> {
-    // Check if current directory exists and is accessible
+    std::fs::create_dir_all(std::env::current_dir()?.join(".gobe"))?;
+
     let current_dir = std::env::current_dir()?;
-    
-    // Create the repository path
     let repo_folder = current_dir.join(".gobe");
-    //
+    
     Ok(LocaleRepository {
       // Должен быть локальный юзер
       author, 
@@ -43,44 +42,37 @@ impl LocaleRepository {
       // Положение на этой машине
       project_sourse_dir: current_dir, 
       // См. выше
-      repository_folder: repo_folder,
+      repository_folder: repo_folder.clone(),
       //---------------------------------------------------------------------
       // Нулевая готовность проекта
       version: Box::new(ProjectVersion::new(0, 0, 0, 0)),
       //----------------------------------------------------------------------
-      // Текущая ветка: None
-      current_branch: Box::new(None),
-      // Главная ветка: NULL
-      main_branch: String::new(), 
-      // Новые ветки: NULL
-      branches: Vec::new()
+      // Текущая ветка
+      current_branch: Box::new(
+        Branch::new(
+        String::from("master"), 
+        repo_folder
+        )?
+      ),
+      // Главная ветка
+      main_branch: String::from("master"), 
+      // Новые ветки
+      branches: vec![String::from("master")]
     })
   }
 
-  fn init(&mut self) -> std::io::Result<()> {
-    self.current_branch = Box::new(
-      Some(
-        Branch::new(
-        String::from("master"), 
-        self.repository_folder.clone()
-        )?
-      )
-    );
-    self.main_branch = String::from("master");
-    self.branches.push(String::from("master"));
+  fn init(&self, is_upload: bool) -> std::io::Result<()> {
+    self.save_info_file()?;
+    if is_upload { self.upload()? }
     Ok(())
   }
 
   pub fn new(author: String, name: String) -> std::io::Result<LocaleRepository> {
-    //
-    std::fs::create_dir_all(std::env::current_dir()?.join(".gobe"))?;
-    //
-    let mut result = Self::alloc(author, name)?;
-    result.init()?;
-    //
-    result.save_info_file()?;
-    //
-    Ok(result)
+    let /* mut */ result = Self::alloc(author, name);
+    if let Ok(ref /* mut */ repo) = result {
+      repo.init(false)?
+    }
+    result
   }
 
   #[allow(dead_code)]

@@ -9,7 +9,7 @@ use crate::system::change::Change;
 pub struct Commit {
   name: String,
   //
-  message: Option<String>,
+  message: String,
   // parent commit
   parent: Option<String>,
   // time pub
@@ -19,34 +19,34 @@ pub struct Commit {
 }
 
 impl Commit {
-  fn alloc(name: String, message: Option<String>, change: Change) -> Commit
+  fn alloc(
+    name: String, message: String, change: Change, parent: Option<String>, path: PathBuf
+  ) -> std::io::Result<Commit>
   {
-    Commit { 
-      name, 
+    std::fs::create_dir(path.join(&name))?;
+    Ok(Commit { 
+      name: name.clone(), 
       message,
-      parent: None,
+      parent,
       change: Box::new(change), 
-      commit_folder: PathBuf::new()
-    }
+      commit_folder: path.join(name)
+    })
   }
 
-  fn init(&mut self, parent: Option<String>, path: PathBuf) {
-    self.parent = parent;
-    self.commit_folder = path.join(&self.name);
+  fn init(&self, is_upload: bool) -> std::io::Result<()> {
+    self.save_info_file()?;
+    if is_upload { self.upload()? }
+    Ok(())
   }
 
   pub fn new(
-    name: String, message: Option<String>, change: Change, parent: Option<String>, path: PathBuf
+    name: String, message: String, change: Change, parent: Option<String>, path: PathBuf
   ) -> std::io::Result<Commit> {
-    //
-    std::fs::create_dir(path.join(&name))?;
-    //
-    let mut result = Self::alloc(name, message, change);
-    result.init(parent, path);
-    //
-    result.save_info_file()?;
-    //
-    Ok(result)
+    let /* mut */ result = Self::alloc(name, message, change, parent, path);
+    if let Ok(ref /* mut */ commit) = result { 
+      commit.init(false)?;
+    }
+    result
   }
 
   pub fn get_name(&self) -> String {
@@ -54,7 +54,7 @@ impl Commit {
   }
 
   pub fn get_message(&self) -> String {
-    self.message.clone().unwrap().clone()
+    self.message.clone()
   }
 
   pub fn get_parent(&self) -> Option<String> {
