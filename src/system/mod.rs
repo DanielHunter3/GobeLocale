@@ -3,3 +3,7 @@ pub mod change;
 pub mod commit;
 pub mod branch;
 pub mod projectversion;
+pub mod folder;
+pub mod branchcontrol;
+pub mod title;
+pub mod commitcontrol;

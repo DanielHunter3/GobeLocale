@@ -1,56 +1,48 @@
-use std::{collections::HashMap, fs::File, path::PathBuf};
+use std::{fs::File, path::PathBuf};
 use serde::{Deserialize, Serialize};
 
-use crate::system::commit::Commit;
-use crate::system::change::Change;
+use super::change::Change;
+use super::commitcontrol::CommitControl;
+use super::folder::Folder;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Branch {
   name: String,
-  last_commit: String,
-  #[serde(skip_serializing)]
-  current_commit: Box<Commit>,
-  commits: Box<HashMap<usize, String>>,
-  branch_folder: PathBuf
+  commit_control: Box<CommitControl>, 
+  folder: Box<Folder>
 }
 
 impl Branch {
-  pub fn alloc(name: String, path: PathBuf) -> std::io::Result<Branch> {
-    std::fs::create_dir(path.join(&name))?;
+  pub fn create(name: String, path: PathBuf) -> std::io::Result<Branch> {
+    let first_commit_name = name.clone() + "_first";
 
-    let xname = name.clone() + "_first";
-    let mut commits = HashMap::new();
-    commits.insert(1, xname.clone());
-
-    Ok(Branch { 
+    let mut result = Ok(Branch { 
       name: name.clone(),
-      last_commit: xname.clone(),
+      commit_control: Box::new(CommitControl::create(Self::create_change(), None)?),
+      folder: Box::new(Folder::new(Some(path.join(name)))?)
+    });
 
-      current_commit: 
-      Box::new(
-        Commit::new(
-          xname.clone(), String::from("first commit"), 
-          Self::alloc_change(), None, path.join(&name)
-        )?
-      ),
+    //--------------------------------
 
-      commits: Box::new(commits),
-      branch_folder: path.join(name)
-    })
+    // TODO
+    if let Ok(branch) = &mut result {
+      branch.commit_control.init(
+        first_commit_name.clone(), 
+        String::from("new commit"), 
+        branch.folder.object_folder.clone().unwrap()
+      )?;
+      branch.load(false)?
+    }
+
+    //-------------------------------
+
+    result
   }
 
-  fn init(&self, is_upload: bool) -> std::io::Result<()> {
+  fn load(&self, is_upload: bool) -> std::io::Result<()> {
     self.save_info_file()?;
     if is_upload { self.upload()? }
     Ok(())
-  }
-
-  pub fn new(name: String, path: PathBuf) -> std::io::Result<Branch> {
-    let /* mut */ result = Self::alloc(name, path);
-    if let Ok(ref /* mut */ branch) = result { // mut
-      branch.init(false)?;
-    }
-    result
   }
 
     // TODO
@@ -60,14 +52,10 @@ impl Branch {
 
   pub fn save_info_file(&self) -> std::io::Result<()> {
     let file = File::create(
-      &self.branch_folder.join(self.name.clone() + ".json")
+      &self.folder.object_folder()?.join(self.name.clone() + ".json")
     )?;
     serde_json::to_writer(file, &self)?;
     Ok(())
-  }
-
-  pub fn get_name(&self) -> String {
-    self.name.clone()
   }
 
   //TODO
@@ -78,7 +66,7 @@ impl Branch {
     Ok(())
   }
 
-  fn alloc_change() -> Change {
+  fn create_change() -> Change {
     Change::new()
   }
 }

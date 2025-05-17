@@ -7,7 +7,7 @@ mod user;
 mod cli;
 
 fn main() {
-  match system::repo::LocaleRepository::new("aaa".into(), "bbb".into()) {
+  match system::repo::LocaleRepository::create("Charlie".into()) {
     Ok(repo) => {
       println!("Repository created successfully");
       // Use repo as needed

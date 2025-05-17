@@ -2,18 +2,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProjectVersion {
-  senior: usize,
-  middle: usize,
-  junior: usize,
-  devstage: usize
+  senior: u8,
+  middle: u8,
+  junior: u8,
+  devstage: u8
 }
 
 impl ProjectVersion {
-  pub fn new(senior: usize, middle: usize, junior: usize, devstage: usize) -> ProjectVersion {
+  pub fn create(senior: u8, middle: u8, junior: u8, devstage: u8) -> ProjectVersion {
     ProjectVersion { senior, middle, junior, devstage }
-  }
-
-  pub fn to_string(&self) -> String {
-    format!("{}.{}.{}.{}", self.senior, self.middle, self.junior, self.devstage)
   }
 }

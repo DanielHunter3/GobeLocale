@@ -3,7 +3,8 @@ use::std::path::PathBuf;
 use serde::{Serialize, Deserialize};
 use std::io::{self};
 
-use crate::system::change::Change;
+use super::change::Change;
+use super::folder::Folder;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Commit {
@@ -15,55 +16,44 @@ pub struct Commit {
   // time pub
   change: Box<Change>,
   // commit folder
-  commit_folder: PathBuf
+  folder: Box<Folder>
 }
 
 impl Commit {
-  fn alloc(
-    name: String, message: String, change: Change, parent: Option<String>, path: PathBuf
-  ) -> std::io::Result<Commit>
+  pub fn create(change: Change, parent: Option<String>) -> std::io::Result<Commit>
   {
-    std::fs::create_dir(path.join(&name))?;
     Ok(Commit { 
-      name: name.clone(), 
-      message,
+      name: String::new(), 
+      message: String::new(),
       parent,
       change: Box::new(change), 
-      commit_folder: path.join(name)
+      folder: Box::new(Folder::new(None)?)
     })
   }
 
-  fn init(&self, is_upload: bool) -> std::io::Result<()> {
+  fn load(&self, is_upload: bool) -> std::io::Result<()> {
     self.save_info_file()?;
     if is_upload { self.upload()? }
     Ok(())
   }
 
-  pub fn new(
-    name: String, message: String, change: Change, parent: Option<String>, path: PathBuf
-  ) -> std::io::Result<Commit> {
-    let /* mut */ result = Self::alloc(name, message, change, parent, path);
-    if let Ok(ref /* mut */ commit) = result { 
-      commit.init(false)?;
-    }
-    result
-  }
+  pub fn init(
+    &mut self, name: String, message: String, path: PathBuf
+  ) -> std::io::Result<()> {
+    self.name = name.clone();
+    self.message = message;
+    self.folder.init(path.join(name))?;
 
-  pub fn get_name(&self) -> String {
-    self.name.clone()
-  }
+    println!("{:?}", self.folder);
 
-  pub fn get_message(&self) -> String {
-    self.message.clone()
-  }
+    self.load(false)?;
 
-  pub fn get_parent(&self) -> Option<String> {
-    self.parent.clone()
+    Ok(())
   }
 
   pub fn save_info_file(&self) -> io::Result<()> {
     let file = File::create(
-      &self.commit_folder.join(self.name.clone() + ".json")
+      &self.folder.object_folder()?.join(self.name.clone() + ".json")
     )?;
     serde_json::to_writer(file, &self)?;
     Ok(())
