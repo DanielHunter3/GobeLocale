@@ -17,7 +17,7 @@ impl BranchControl {
     Ok(
       BranchControl { 
         current_branch: Box::new(
-          Branch::create(String::from("master"), path.clone())?
+          Branch::create(String::from("master"), path)?
         ), 
         main_branch: String::from("master"), 
         branches: vec![String::from("master")], 
